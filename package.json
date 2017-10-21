@@ -1,0 +1,24 @@
+{
+	"name": "kindle-feeder",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/arkadiusz-wieczorek/kindle-feeder.git"
+	},
+	"author": "Arkadiusz Wieczorek",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/arkadiusz-wieczorek/kindle-feeder/issues"
+	},
+	"homepage": "https://github.com/arkadiusz-wieczorek/kindle-feeder#readme",
+	"dependencies": {
+		"newspaperjs": "^1.0.6",
+		"node-html-parser": "^1.1.5",
+		"rss-parser": "^2.10.8"
+	}
+}
