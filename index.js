@@ -1,16 +1,19 @@
 const getArticle = require("newspaperjs").Article;
 const rssParser = require("rss-parser");
 const html = require("node-html-parser").parse;
+const getImage = require("./components/image.js");
 
 const state = {
 	links: [],
 	promises: [],
 	entries: [],
 	newspaper_content: html(`
+								<!DOCTYPE html>
 								<html>
 									<head>
-										<meta charset="utf-8">
 										<title>Daily newspaper</title>
+										<meta charset="utf-8">
+										<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 									</head>
 									<body>
 										<h1>Daily newspaper</h1>
@@ -20,21 +23,30 @@ const state = {
 							`),
 };
 
-const fetchArticle = link => {
+// currying function
+const processContent = (article, resolve) => {
+	return result => {
+		console.log("GET", result.date, result.title);
+		const article_content = html(`
+			<article>
+				<img src="${article.id}.jpg" alt="${article.id}" />
+				<h2>${result.title}</h2>
+				<p style="text-align: justify;">${result.text}</p>
+			</article>
+			<mbp:pagebreak/>
+			`);
+
+		getImage(`http:${result.topImage}`, `${article.id}.jpg`, () => {
+			console.log(`GET image ${article.id}`);
+			resolve(article_content);
+		});
+	};
+};
+
+const fetchArticle = article => {
 	return new Promise((resolve, reject) => {
-		getArticle(link)
-			.then(result => {
-				console.log("GET", result.date, result.title);
-				const article = html(`
-										<article>
-											<img src="http:${result.topImage}">
-											<h2>${result.title}</h2>
-											<p style="text-align: justify;">${result.text}</p>
-											<hr>
-										</article>
-									`);
-				resolve(article);
-			})
+		getArticle(article.url)
+			.then(processContent(article, resolve))
 			.catch(reason => {
 				console.log(reason);
 				reject();
@@ -52,9 +64,10 @@ const createDocument = data => {
 };
 
 rssParser.parseURL("http://wiadomosci.onet.pl/.feed", (err, parsed) => {
-	state.links = parsed.feed.entries.map(entry => entry.link).reverse();
-	state.promises = state.links.map(link => fetchArticle(link));
-
+	state.links = parsed.feed.entries
+		.map(entry => ({ id: entry.id, url: entry.link }))
+		.reverse();
+	state.promises = state.links.map(article => fetchArticle(article));
 	Promise.all(state.promises).then(result => {
 		createDocument(result);
 	});
