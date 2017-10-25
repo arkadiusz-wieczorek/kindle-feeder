@@ -3,6 +3,7 @@ const rssParser = require("rss-parser");
 const html = require("node-html-parser").parse;
 const getImage = require("./components/image.js");
 const isOneDay = require("./components/time-helper.js");
+const progressBar = require("./components/progress-bar.js");
 
 const state = {
 	links: [],
@@ -28,16 +29,11 @@ const state = {
 // currying function
 const processContent = (article, resolve) => {
 	return result => {
-		state.downloaded += 1;
-		process.stdout.write(".");
-		process.stdout.clearLine();
-		process.stdout.cursorTo(0);
-		process.stdout.write(progress + "%");
-		console.log(`${state.downloaded} / ${state.links.length}`);
+		progressBar((state.downloaded += 1), state.links.length);
 
 		const article_content = html(`
 			<article>
-				<img src="${article.id}.jpg" alt="${article.id}" />
+				<img style="width: 100%;" src="${article.id}.jpg" alt="${article.id}" />
 				<h2>${result.title}</h2>
 				<p style="text-align: justify !important;">${result.text}</p>
 			</article>
