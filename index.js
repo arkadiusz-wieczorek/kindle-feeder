@@ -4,6 +4,7 @@ const html = require("node-html-parser").parse;
 const getImage = require("./components/image.js");
 const isOneDay = require("./components/time-helper.js");
 const progressBar = require("./components/progress-bar.js");
+const fs = require("fs");
 
 const state = {
 	links: [],
@@ -31,18 +32,28 @@ const processContent = (article, resolve) => {
 	return result => {
 		progressBar((state.downloaded += 1), state.links.length);
 
+		// add missing spaces
+		const re = /(\w)(\.|\?|\,|\!){1}(\w)/g;
+		const article_text = result.text.toString().replace(re, "$1$2 $3");
+
 		const article_content = html(`
 			<article>
-				<img style="width: 100%;" src="${article.id}.jpg" alt="${article.id}" />
+				<center>
+					<img src="./${article.id}.jpg" alt="${article.id}" />
+				</center>
 				<h2>${result.title}</h2>
-				<p style="text-align: justify !important;">${result.text}</p>
+				<p style="text-align: justify !important;">${article_text}</p>
 			</article>
 			<mbp:pagebreak/>
 		`);
 
-		getImage(`http:${result.topImage}`, `${article.id}.jpg`, () => {
-			resolve(article_content);
-		});
+		getImage(
+			`http:${result.topImage}`,
+			`./output/${article.id}.jpg`,
+			() => {
+				resolve(article_content);
+			}
+		);
 	};
 };
 
@@ -58,12 +69,19 @@ const fetchArticle = article => {
 };
 
 const createDocument = data => {
-	state.entries = data;
-	let body = state.newspaper_content.querySelector("body");
-	for (let i = 0; i < state.entries.length; i++) {
-		body.appendChild(state.entries[i]);
-	}
-	console.log(state.newspaper_content.toString());
+	return new Promise(function(resolve, reject) {
+		state.entries = data;
+		let body = state.newspaper_content.querySelector("body");
+		for (let i = 0; i < state.entries.length; i++) {
+			body.appendChild(state.entries[i]);
+		}
+
+		fs.writeFile("./output/index.html", state.newspaper_content, err => {
+			if (err) throw err;
+			console.log("HTML document has been saved!");
+		});
+		resolve();
+	});
 };
 
 rssParser.parseURL("http://wiadomosci.onet.pl/.feed", (err, parsed) => {
@@ -78,6 +96,8 @@ rssParser.parseURL("http://wiadomosci.onet.pl/.feed", (err, parsed) => {
 	state.promises = state.links.map(article => fetchArticle(article));
 	Promise.all(state.promises).then(result => {
 		console.log(`${new Date().getTime()}: resolve promises`);
-		createDocument(result);
+		createDocument(result).then(() => {
+			console.log("→ createBook, → sendMail");
+		});
 	});
 });

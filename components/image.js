@@ -9,8 +9,8 @@ const getImage = (uri, filename, callback) => {
 			stream
 				.pipe(
 					fs.createWriteStream(filename).on("error", err => {
-						callback(error, filename);
-						stream.read();
+						callback(err, filename);
+						// stream.read();
 					})
 				)
 				.on("close", () => {
