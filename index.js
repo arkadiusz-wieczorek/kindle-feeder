@@ -18,9 +18,6 @@ const state = {
 				<title>Daily newspaper</title>
 				<meta charset="utf-8">
 				<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-				<style>
-					p.justify {text-align: justify;}
-				</style>
 			</head>
 			<body>
 				<h1>Daily newspaper</h1>
@@ -37,19 +34,17 @@ const processContent = (article, resolve) => {
 		progressBar((state.downloaded += 1), state.links.length);
 
 		// add missing spaces
-		const re = /(\w)(\.|\?|\,|\!){1}(\w)/g;
+		const re = /((\w)|("|\?"|\."|,|'))(\.|\?|\,|\!){1}(\w)/g;
 		const article_text = result.text.toString().replace(re, "$1$2 $3");
 
-		// <p style="text-align: justify !important;">${article_text}</p>
 		const article_content = html(`
 			<article>
 				<center>
 					<img src="./${article.id}.jpg" alt="${article.id}" />
 				</center>
 				<h2>${result.title}</h2>
-				<p class="justify">${article_text}</p>
+				<p style="text-align: justify;">${article_text}</p>
 			</article>
-			<mbp:pagebreak/>
 		`);
 
 		getImage(
@@ -88,7 +83,8 @@ const createDocument = data => {
 		resolve();
 	});
 };
-
+// http://wiadomosci.onet.pl/.feed
+// https://www.engadget.com/rss.xml
 rssParser.parseURL("http://wiadomosci.onet.pl/.feed", (err, parsed) => {
 	console.log(`${new Date().getTime()}: start rss parser`);
 
@@ -96,14 +92,14 @@ rssParser.parseURL("http://wiadomosci.onet.pl/.feed", (err, parsed) => {
 		.filter(entry => isOneDay(entry.pubDate))
 		.map(entry => ({ id: entry.id, url: entry.link }))
 		.reverse();
+
 	console.log(`${new Date().getTime()}: ${state.links.length} articles`);
 
 	state.promises = state.links.map(article => fetchArticle(article));
-	Promise.all(state.promises).then(result => {
-		console.log(`${new Date().getTime()}: resolve promises`);
-		createDocument(result).then(() => {
-			generateEbook();
-			console.log("→ createBook, → sendMail");
+	Promise.all(state.promises)
+		.then(result => createDocument(result))
+		.then(() => generateEbook())
+		.then(() => {
+			console.log("created");
 		});
-	});
 });

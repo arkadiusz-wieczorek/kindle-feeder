@@ -17,7 +17,6 @@
 	},
 	"homepage": "https://github.com/arkadiusz-wieczorek/kindle-feeder#readme",
 	"dependencies": {
-		"ebook-convert": "^2.0.1",
 		"moment": "^2.19.1",
 		"newspaperjs": "^1.0.6",
 		"node-html-parser": "^1.1.5",
