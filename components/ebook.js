@@ -10,7 +10,10 @@ const generateEbook = () =>
 				"../output/index.html"
 			)} -c0 -verbose -o "ebook.mobi"`,
 			(error, stdout, stderr) => {
-				console.log("done");
+				console.log(
+					`${new Date().getTime()}: ebook has been generated`
+				);
+
 				resolve();
 			}
 		);

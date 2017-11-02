@@ -1,11 +1,14 @@
+const fs = require("fs");
 const getArticle = require("newspaperjs").Article;
 const rssParser = require("rss-parser");
 const html = require("node-html-parser").parse;
 const getImage = require("./components/image.js");
 const isOneDay = require("./components/time-helper.js");
 const progressBar = require("./components/progress-bar.js");
-const fs = require("fs");
 const generateEbook = require("./components/ebook.js");
+const sendMail = require("./components/sender.js");
+const cleanOutput = require("./components/clean-output.js");
+const moment = require("moment");
 
 const state = {
 	links: [],
@@ -15,7 +18,9 @@ const state = {
 		<!DOCTYPE html>
 		<html>
 			<head>
-				<title>Daily newspaper</title>
+				<title>Daily newspaper - ${moment(new Date().toString()).format(
+					"DD-MM-YYYY"
+				)}</title>
 				<meta charset="utf-8">
 				<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 			</head>
@@ -78,9 +83,11 @@ const createDocument = data => {
 
 		fs.writeFile("./output/index.html", state.newspaper_content, err => {
 			if (err) throw err;
-			console.log("HTML document has been saved!");
+			console.log(
+				`\n${new Date().getTime()}: html document has been saved`
+			);
+			resolve();
 		});
-		resolve();
 	});
 };
 // http://wiadomosci.onet.pl/.feed
@@ -99,7 +106,7 @@ rssParser.parseURL("http://wiadomosci.onet.pl/.feed", (err, parsed) => {
 	Promise.all(state.promises)
 		.then(result => createDocument(result))
 		.then(() => generateEbook())
-		.then(() => {
-			console.log("created");
-		});
+		.then(() => sendMail())
+		.then(() => cleanOutput())
+		.then(() => console.log(`${new Date().getTime()}: exit`));
 });

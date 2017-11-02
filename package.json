@@ -21,6 +21,8 @@
 		"newspaperjs": "^1.0.6",
 		"node-html-parser": "^1.1.5",
 		"nodemailer": "^4.2.0",
+		"nodemailer-smtp-transport": "^2.7.4",
+		"nodemailer-wellknown": "^0.2.3",
 		"rss-parser": "^2.10.8"
 	}
 }
